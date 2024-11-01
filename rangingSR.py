@@ -27,7 +27,7 @@ def findAllTickers(excelPage):
     while currentPage.cell(row = rowNumber, column = 1).value != None:
         tickerDictionary[currentPage.cell(row = rowNumber, column = 1).value] = None #append to dictionary for immediate finding
         rowNumber += 1
-    print(tickerDictionary)
+
     return tickerDictionary
     
 
@@ -35,17 +35,17 @@ def findAllTickers(excelPage):
 #using data retrieved by finvizData() will write to excel sheet
 #PARAMETERS: data -> data scraped from Finviz, excelPage -> which page we want to write to
 #RETURNS: NONE
-def writeToExcel(data, excelPage, alreadyFoundTickers):
+def writeToExcel(data, excelPage):
     excelFile = load_workbook("D:/Programming/Repositories/finvizTracker/RangingSR.xlsx")
     currentPage = excelFile[excelPage]
  
     startingLine = startLine(currentPage)
     index = 0
-
+    alreadyFoundTickers = findAllTickers(excelPage)
     for ticker in data[0]: #for each row we have in our data aka each ticker
         #only add new findings not in the sheet already, this screener has little variance
         if(ticker not in alreadyFoundTickers):
-            currentPage.cell(row = startingLine, column = 1).value = data[0][index] #ticker
+            currentPage.cell(row = startingLine, column = 1).value = ticker #ticker
             #currentPage.cell(row = startingLine, column = 2).value = data[1][index] #sector
             currentPage.cell(row = startingLine, column = 3).value = date.today() #date
             #currentPage.cell(row = startingLine, column = 4).value = data[3][index] #cap
@@ -72,7 +72,7 @@ def writeToExcel(data, excelPage, alreadyFoundTickers):
 def parseData(excelPage):
     header = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
     urls = ["https://finviz.com/screener.ashx?v=111&p=d&f=cap_largeover,geo_usa,sh_avgvol_o1000,sh_opt_option,sh_price_o2,ta_averagetruerange_u0.5,ta_pattern_horizontal&ft=4&ta=0", "https://finviz.com/screener.ashx?v=111&p=d&f=cap_largeover,geo_usa,sh_avgvol_o1000,sh_opt_option,sh_price_o2,ta_averagetruerange_u0.5,ta_pattern_horizontal&ft=4&ta=0&r=21", "https://finviz.com/screener.ashx?v=111&p=d&f=cap_largeover,geo_usa,sh_avgvol_o1000,sh_opt_option,sh_price_o2,ta_averagetruerange_u0.5,ta_pattern_horizontal&ft=4&ta=0&r=41"]
-    alreadyFoundTickers = findAllTickers(excelPage)
+ 
 
     for url in urls:
         finvizPage = requests.get(url, headers=header).text  
@@ -92,7 +92,7 @@ def parseData(excelPage):
             
             data = [names, sectors, date.today(), marketCaps, prices, changes, volumes]
             
-            writeToExcel(data, excelPage, alreadyFoundTickers)
+            writeToExcel(data, excelPage)
         else:
             print("NO TICKERS FOUND ON " + url)
 
